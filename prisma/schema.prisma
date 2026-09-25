@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generado/prisma"
+  moduleformat = "cjs"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model Cliente {
+  id        Int        @id @default(autoincrement())
+  nombre    String     @db.VarChar(100)
+  telefono  String     @db.VarChar(20)
+  correo    String     @unique @db.VarChar(150)
+  
+  vehiculos Vehiculo[]
+
+  @@map("clientes")
+}
+
+model Vehiculo {
+  id          Int               @id @default(autoincrement())
+  placa       String            @unique @db.VarChar(20)
+  marca       String            @db.VarChar(50)
+  modelo      String            @db.VarChar(50)
+  anio        Int
+  clienteId   Int
+
+  cliente     Cliente           @relation(fields: [clienteId], references: [id])
+  ordenes     OrdenServicio[]
+
+  @@index([clienteId])
+  @@map("vehiculos")
+}
+
+enum EstadoOrden {
+  abierta
+  en_proceso
+  entregada
+  cancelada
+}
+
+model OrdenServicio {
+  id           Int          @id @default(autoincrement())
+  descripcion  String       @db.Text
+  fechaIngreso DateTime     @default(now())
+  estado       EstadoOrden  @default(abierta)
+  vehiculoId   Int
+
+  vehiculo     Vehiculo     @relation(fields: [vehiculoId], references: [id])
+  refacciones  Refaccion[]
+
+  @@index([vehiculoId])
+  @@map("ordenes_servicio")
+}
+
+model Refaccion {
+  id                Int             @id @default(autoincrement())
+  nombre            String          @db.VarChar(100)
+  precio            Float
+  ordenServicioId   Int
+
+  ordenServicio     OrdenServicio   @relation(fields: [ordenServicioId], references: [id])
+
+  @@index([ordenServicioId])
+  @@map("refacciones")
+}
